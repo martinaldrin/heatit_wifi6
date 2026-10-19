@@ -141,10 +141,10 @@ class HeatitWiFi6API:
         response = await self._post(API_PARAMETERS.rstrip("/"), data, timeout=20, retries=3)
 
         if response and response.get("status", "Failed") == "Success":
-            _LOGGER.debug(f"set_parameter({parameter, value}): {response.get("value", "Success, but no value of response: %s")}", str(response))
+            _LOGGER.debug("set_parameter(%s, %s): %s", parameter, value, response.get("value", "Success, but no value in response"))
             return response
         
-        _LOGGER.error("set_parameter({parameter, value}): %s", str(response))
+        _LOGGER.error("set_parameter(%s, %s) failed: %s", parameter, value, str(response))
         return {}
 
 
@@ -155,11 +155,11 @@ class HeatitWiFi6API:
             _LOGGER.error("Unknown reset_type: %s", reset_type)
             return { "status": "Failed", "detail": "Unknown reset_type." }
         
-        response = await self._delete(f"{API_RESET.rstrip("/")}/{reset_type}")
+        response = await self._delete(f"{API_RESET.rstrip('/')}/{reset_type}")
 
         if response and response.get("status", "Failed") == "Success":
-            _LOGGER.info(f"reset_device({reset_type}): {response.get("value", "Success, but no value of response. (?)")}")
+            _LOGGER.info("reset_device(%s): %s", reset_type, response.get("value", "Success, but no value in response"))
             return response
         
-        _LOGGER.error("reset_device({reset_type}): %s", str(response))
+        _LOGGER.error("reset_device(%s) failed: %s", reset_type, str(response))
         return {}

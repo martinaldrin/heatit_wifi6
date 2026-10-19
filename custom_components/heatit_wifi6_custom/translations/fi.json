@@ -1,6 +1,9 @@
 {
    "title": "Heatit WiFi6 Termostaatti",
    "config": {
+      "abort": {
+         "already_configured": "Tämä termostaatti on jo lisätty."
+      },
       "error": {
          "cannot_connect": "Yhteys epäonnistui. Tarkista osoite ja anna vain url-osoitteen perusosa, esim. http://192.168.10.5 ",
          "unknown": "Tuntematon virhe."

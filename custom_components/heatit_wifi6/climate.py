@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components import persistent_notification
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ClimateEntityFeature,
@@ -41,8 +42,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 "Device may be slow to respond or offline. Will retry during polling.",
                 name, host
             )
-            # Still create entity - it will retry during async_update
-            device_id = f"unknown_{host.replace('.', '_')}"
+            # Still create entity - it will retry during async_update.
+            # Prefer the device id stored when the entry was created, so the entity's
+            # unique_id does not change (and duplicate) once the device comes online.
+            device_id = entry.unique_id or f"unknown_{host.replace('.', '_')}"
         
         entity = HeatitWiFi6Thermostat(hass, entry, api, name, device_id)
         # Don't update before add - let polling handle initial connection to speed up startup
@@ -145,7 +148,8 @@ class HeatitWiFi6Thermostat(ClimateEntity):
                     self._temperature = data.get("externalTemperature", None)
                 case _:
                     self._temperature = data.get("internalTemperature", None)
-            self._param_operatingMode = data.get("parameters").get("operatingMode")
+            # A reply without "parameters" must not raise AttributeError.
+            self._param_operatingMode = (data.get("parameters") or {}).get("operatingMode")
             # Set preset mode according to operating mode: 3 = ECO, 1 = None
             if self._param_operatingMode == 3:
                 self._preset_mode = PRESET_ECO
@@ -400,9 +404,11 @@ class HeatitWiFi6Thermostat(ClimateEntity):
             )
             await self.async_update()
             self.schedule_update_ha_state()
-            self.hass.components.persistent_notification.create(
+            # hass.components was removed from Home Assistant; use the module API.
+            persistent_notification.async_create(
+                self.hass,
                 "Target temperature can changed only when Heatit WiFi6 device is ON.",
-                title="Heatif WiFi6 Thermostat",
+                title="Heatit WiFi6 Thermostat",
             )
             return
         temperature = kwargs.get("temperature")
@@ -411,7 +417,6 @@ class HeatitWiFi6Thermostat(ClimateEntity):
                 "async_set_temperature(): A new target temperature not set/known. Change target value aborted."
             )
             return
-        self._set_temperature_pending = True
         match self._param_operatingMode:
             case 1:
                 param = "heatingSetpoint"
@@ -420,7 +425,11 @@ class HeatitWiFi6Thermostat(ClimateEntity):
             case 3:
                 param = "ecoSetpoint"
             case _:
+                # Unknown operating mode: nothing to set. Return before the pending
+                # flag is raised, otherwise it would stay True and block all later
+                # setpoint refreshes in async_update().
                 return
+        self._set_temperature_pending = True
         if await self._api.set_parameter(param, temperature):
             setattr(self, param, temperature)
             self._set_temperature_pending = False

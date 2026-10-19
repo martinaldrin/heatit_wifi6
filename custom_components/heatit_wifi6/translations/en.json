@@ -1,6 +1,9 @@
 {
    "title": "Heatit WiFi6 Thermostat",
    "config": {
+      "abort": {
+         "already_configured": "This thermostat has already been added."
+      },
       "error": {
          "cannot_connect": "Connect failed. Please check the address. It should contain only url base address. E.g. http://192.168.10.5 ",
          "unknown": "Unknown error."
