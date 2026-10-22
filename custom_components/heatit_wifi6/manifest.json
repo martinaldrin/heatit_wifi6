@@ -1,7 +1,7 @@
 {
   "domain": "heatit_wifi6",
-  "name": "Heatit WiFi6 Thermostat",
-  "version": "1.1.3",
+  "name": "Heatit WiFi6 / WiFi7 Thermostat",
+  "version": "1.1.4",
   "config_flow": true,
   "documentation": "https://github.com/mattik-gh/heatit_wifi6",
   "dependencies": ["network"],

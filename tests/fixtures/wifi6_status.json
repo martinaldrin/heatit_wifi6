@@ -1,0 +1,49 @@
+{
+  "id": "TESTWIFI6DEVICEID",
+  "room": "test",
+  "name": "THERMOSTAT_test",
+  "state": "Idle",
+  "currentPower": 0,
+  "totalConsumption": 11.21,
+  "internalTemperature": 21.1,
+  "floorTemperature": 24.1,
+  "externalTemperature": 5.0,
+  "parameters": {
+    "operatingMode": 1,
+    "internalCalibration": 0.0,
+    "floorCalibration": 0.0,
+    "externalCalibration": 0.0,
+    "sensorMode": 0,
+    "sensorValue": 1,
+    "temperatureDisplay": false,
+    "activeDisplayBrightness": 7,
+    "standbyDisplayBrightness": 5,
+    "ecoSetpoint": 18.0,
+    "heatingSetpoint": 23.5,
+    "coolingSetpoint": 18.0,
+    "internalMinimumTemperatureLimit": 5.0,
+    "internalMaximumTemperatureLimit": 40.0,
+    "localControl": 0,
+    "floorMinimumTemperatureLimit": 16.0,
+    "floorMaximumTemperatureLimit": 28.5,
+    "externalMinimumTemperatureLimit": 5.0,
+    "externalMaximumTemperatureLimit": 40.0,
+    "regulationMode": false,
+    "actionAfterError": 0,
+    "temperatureControlHysteresis": 0.5,
+    "OWD": {
+      "openWindowDetection": false,
+      "activeNow": false
+    },
+    "sizeOfLoad": 0,
+    "disableButtons": false,
+    "powerRegulatorActiveTime": 2
+  },
+  "network": {
+    "SSID": "test-ssid",
+    "mac": "00:00:00:00:00:00",
+    "ipAddress": "192.0.2.10",
+    "wifiSignalStrength": "-40dBm"
+  },
+  "firmware": "2.26"
+}

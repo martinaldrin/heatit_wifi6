@@ -1,5 +1,5 @@
 {
-   "title": "Heatit WiFi6 Thermostat",
+   "title": "Heatit WiFi6 / WiFi7 Thermostat",
    "config": {
       "abort": {
          "already_configured": "This thermostat has already been added."
@@ -10,7 +10,7 @@
       },
       "step": {
          "user": {
-            "title": "Configure Heatit WiFi6",
+            "title": "Configure Heatit thermostat",
             "description": "Enter short name and base url address for the thermostat",
             "data": {
                "name": "Name ",

@@ -37,7 +37,7 @@ class HeatitWiFi6ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 _LOGGER.info("add_device_done - name: %s, host: %s", str(self._name), str(self._host))
                 return self.async_create_entry(
-                    title = f"Heatit WiFi6 ({self._name})",
+                    title = f"Heatit ({self._name})",
                     data = user_input
                 )
         

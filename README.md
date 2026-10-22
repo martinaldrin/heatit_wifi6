@@ -1,6 +1,6 @@
-# Heatit WiFi6 Integration for Home Assistant
+# Heatit WiFi6 / WiFi7 Integration for Home Assistant
 
-This integration provides support for Heatit WiFi6 thermostats in Home Assistant. 
+This integration provides support for Heatit WiFi6 and Heatit WiFi7 thermostats in Home Assistant. 
 The device is also sold under various other names depending on the region, such as "Älytermostaatti Pistesarjat WiFi6" in Finland.
 
 ## Disclaimer
@@ -8,6 +8,7 @@ This software is a third-party integration and is not affiliated with, maintaine
 
 ## Supported Devices
 * Heatit WiFi6 Thermostat (Firmware v2.20 and newer)
+* Heatit WiFi7 Thermostat (tested with firmware 0.1.16: status, setpoint and temperature sensors, energy and power. The WiFi7 relay mode, BlueFusion and DirectLink are not supported.)
 
 ## Installation
 

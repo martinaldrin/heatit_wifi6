@@ -1,0 +1,62 @@
+{
+  "id": "TESTWIFI7DEVICEID",
+  "name": "THERMOSTAT_test",
+  "room": "test",
+  "state": "Heating",
+  "currentPower": 303,
+  "totalConsumption": 0.29,
+  "internalTemperature": 25.6,
+  "floorTemperature": 24.6,
+  "externalTemperature": 0.0,
+  "otaProgress": 0,
+  "parameters": {
+    "disableButtons": 0,
+    "sensorMode": 0,
+    "externalSensorFallback": 2,
+    "sensorValue": 3,
+    "internalMinimumTemperatureLimit": 5.0,
+    "internalMaximumTemperatureLimit": 40.0,
+    "floorMinimumTemperatureLimit": 5.0,
+    "floorMaximumTemperatureLimit": 40.0,
+    "externalMinimumTemperatureLimit": 5.0,
+    "externalMaximumTemperatureLimit": 40.0,
+    "internalSensorCalibration": 0.0,
+    "floorSensorCalibration": 0.0,
+    "externalSensorCalibration": 0.0,
+    "regulationMode": false,
+    "temperatureControlHysteresis": 0.5,
+    "temperatureDisplay": false,
+    "activeDisplayBrightness": 100,
+    "standbyDisplayBrightness": 50,
+    "actionAfterError": 0,
+    "heatingSetpoint": 27.0,
+    "coolingSetpoint": 18.0,
+    "ecoSetpoint": 18.0,
+    "powerRegulatorActiveTime": 20,
+    "operatingMode": 1,
+    "openWindowDetection": false,
+    "sizeOfLoad": 0,
+    "lowTemperatureProtection": 0.0,
+    "OWD": {
+      "openWindowDetection": false,
+      "activeNow": false,
+      "activeTime": 0
+    }
+  },
+  "blueFusion": {
+    "link": []
+  },
+  "directlink": {
+    "relayControl": [],
+    "masterThermostat": []
+  },
+  "network": {
+    "SSID": "test-ssid",
+    "mac": "00:00:00:00:00:00",
+    "ipAddress": "192.0.2.10",
+    "wifiSignalStrength": "-52dBm",
+    "status": "ok"
+  },
+  "firmware": "0.1.16",
+  "model": "Heatit WiFi7"
+}

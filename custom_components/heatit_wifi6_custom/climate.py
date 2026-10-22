@@ -12,8 +12,9 @@ from homeassistant.components.climate.const import (
     PRESET_NONE,
 )
 from homeassistant.const import UnitOfTemperature, CONF_HOST, CONF_NAME
+from homeassistant.helpers.device_registry import DeviceInfo
 from datetime import timedelta
-from .const import SENSORMODES, SENSORVALUES, POLL_INTERVAL
+from .const import DOMAIN, SENSORMODES, SENSORVALUES, POLL_INTERVAL
 from .api import HeatitWiFi6API
 from .exceptions import CannotConnect
 
@@ -32,8 +33,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
         _LOGGER.info("Heatit WiFi6 async_setup_entry() name: %s, host: %s", name, host)
 
         api = HeatitWiFi6API(host)
-        # Use shorter timeout and fewer retries for faster startup - device will connect via polling if needed
-        device_id = await api.get_device_id(retries=0, timeout=8)
+        # Use shorter timeout and fewer retries for faster startup - device will connect via polling if needed.
+        # One status request gives the id and the model/firmware for the device page.
+        status = await api.get_status(retries=0, timeout=8)
+        device_id = status.get("id", "unknown") if status else "unknown"
         _LOGGER.debug("Name: %s, device_id: %s", name, device_id)
         
         if device_id == "unknown":
@@ -47,7 +50,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             # unique_id does not change (and duplicate) once the device comes online.
             device_id = entry.unique_id or f"unknown_{host.replace('.', '_')}"
         
-        entity = HeatitWiFi6Thermostat(hass, entry, api, name, device_id)
+        entity = HeatitWiFi6Thermostat(hass, entry, api, name, device_id, status or {})
         # Don't update before add - let polling handle initial connection to speed up startup
         async_add_entities([entity], False)
         _LOGGER.info("Heatit WiFi6 %s has been added to the list of entities.", name)
@@ -65,8 +68,9 @@ class HeatitWiFi6Thermostat(ClimateEntity):
     should_poll = False
     SCAN_INTERVAL = timedelta(minutes=POLL_INTERVAL)
 
-    def __init__(self, hass, entry, api, name, device_id):
+    def __init__(self, hass, entry, api, name, device_id, status=None):
         _LOGGER.debug("HeatitWiFi6Thermostat::__init__(): %s", name)
+        status = status or {}
         self.hass = hass
         self.entry = entry
         self._api = api
@@ -114,7 +118,9 @@ class HeatitWiFi6Thermostat(ClimateEntity):
         self._net_ipAddress = None
         self._net_wifiSignalStrength = None
         self._net_status = None
-        self._hw_firmware = None
+        self._hw_firmware = status.get("firmware")
+        # The WiFi7 reports its model in the status payload; the WiFi6 does not.
+        self._hw_model = status.get("model") or "Heatit WiFi6"
 
         self._available = True
 
@@ -202,14 +208,16 @@ class HeatitWiFi6Thermostat(ClimateEntity):
             self._param_externalMaximumTemperatureLimit = data.get(
                 "parameters", {}
             ).get("externalMaximumTemperatureLimit", None)
-            self._param_internalCalibration = data.get("parameters", {}).get(
-                "internalCalibration", None
+            # WiFi6 calls these ...Calibration, WiFi7 renamed them to ...SensorCalibration.
+            params = data.get("parameters", {}) or {}
+            self._param_internalCalibration = params.get(
+                "internalSensorCalibration", params.get("internalCalibration")
             )
-            self._param_floorCalibration = data.get("parameters", {}).get(
-                "floorCalibration", None
+            self._param_floorCalibration = params.get(
+                "floorSensorCalibration", params.get("floorCalibration")
             )
-            self._param_externalCalibration = data.get("parameters", {}).get(
-                "externalCalibration", None
+            self._param_externalCalibration = params.get(
+                "externalSensorCalibration", params.get("externalCalibration")
             )
             self._param_regulationMode = data.get("parameters", {}).get(
                 "regulationMode", None
@@ -254,6 +262,7 @@ class HeatitWiFi6Thermostat(ClimateEntity):
             )
             self._net_status = data.get("network", {}).get("status", None)
             self._hw_firmware = data.get("firmware", None)
+            self._hw_model = data.get("model") or self._hw_model
 
             _LOGGER.debug("Status fetched from the Heatit WiFi6: %s", self.name)
         else:
@@ -266,6 +275,17 @@ class HeatitWiFi6Thermostat(ClimateEntity):
             self._hvac_mode = HVACMode.OFF
             self._hvac_action = HVACAction.OFF
             self._net_status = "fail"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Group the entity under a device that shows model and firmware."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, str(self._device_id))},
+            name=self._name,
+            manufacturer="Heatit",
+            model=self._hw_model,
+            sw_version=self._hw_firmware,
+        )
 
     @property
     def unique_id(self):
@@ -387,6 +407,7 @@ class HeatitWiFi6Thermostat(ClimateEntity):
             "net_wifiSignalStrength": self._net_wifiSignalStrength,
             "net_status": self._net_status,
             "hw_firmware": self._hw_firmware,
+            "hw_model": self._hw_model,
         }
         return attrs
 
