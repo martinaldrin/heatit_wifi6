@@ -133,6 +133,94 @@ async def test_device_registry_entry(hass, enable_custom_integrations, thermosta
     assert devices[0].sw_version == firmware
 
 
+# ---------------------------------------------------------------- discovery
+def _zeroconf_info(url, device_id, name="directlink._tf._tcp.local."):
+    from ipaddress import ip_address
+    from urllib.parse import urlparse
+    from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+    u = urlparse(url)
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(u.hostname), ip_addresses=[ip_address(u.hostname)],
+        port=u.port, hostname="tf-test.local.", type="_tf._tcp.local.", name=name,
+        properties={"id": device_id, "mid": device_id, "state": "stop"})
+
+
+async def _discover(hass, info):
+    return await hass.config_entries.flow.async_init(DOMAIN, context={"source": "zeroconf"}, data=info)
+
+
+async def test_manifest_registers_the_mdns_service(hass, enable_custom_integrations):
+    from homeassistant.loader import async_get_zeroconf
+    matchers = (await async_get_zeroconf(hass)).get("_tf._tcp.local.", [])
+    assert any(m["domain"] == DOMAIN and m.get("name") == "directlink*" for m in matchers), matchers
+
+
+async def test_discovery_offers_a_new_thermostat(hass, enable_custom_integrations, wifi7):
+    r = await _discover(hass, _zeroconf_info(wifi7["url"], "TESTWIFI7DEVICEID"))
+    assert r["type"] == FlowResultType.FORM and r["step_id"] == "discovery_confirm"
+    r = await hass.config_entries.flow.async_configure(r["flow_id"], {"name": "Hall"})
+    assert r["type"] == FlowResultType.CREATE_ENTRY
+    assert r["result"].unique_id == "TESTWIFI7DEVICEID"
+    assert r["data"] == {"name": "Hall", "host": wifi7["url"]}
+
+
+async def test_discovery_updates_the_address_of_a_known_thermostat(hass, enable_custom_integrations, wifi7):
+    """The router gave the thermostat a new IP: the entry must follow it."""
+    r = await _add(hass, wifi7["url"])
+    entry = r["result"]
+    entry_data_before = entry.data["host"]
+    # Same thermostat now answers on another address (a second local server stands in for it).
+    other = await _serve(_load("wifi7_status.json"))
+    try:
+        res = await _discover(hass, _zeroconf_info(other["url"], "TESTWIFI7DEVICEID"))
+        await hass.async_block_till_done()
+        assert res["type"] == FlowResultType.ABORT and res["reason"] == "already_configured"
+        assert entry.data["host"] == other["url"] != entry_data_before
+    finally:
+        await other["runner"].cleanup()
+
+
+async def test_discovery_does_not_move_a_thermostat_to_an_address_that_does_not_answer(
+        hass, enable_custom_integrations, wifi7):
+    r = await _add(hass, wifi7["url"])
+    entry = r["result"]
+    res = await _discover(hass, _zeroconf_info("http://127.0.0.1:9", "TESTWIFI7DEVICEID"))
+    assert res["type"] == FlowResultType.ABORT and res["reason"] == "cannot_connect"
+    assert entry.data["host"] == wifi7["url"]
+
+
+async def test_discovery_does_not_move_a_thermostat_to_a_different_device(
+        hass, enable_custom_integrations, wifi6, wifi7):
+    """An announcement whose address answers with another id must be ignored."""
+    entry = (await _add(hass, wifi7["url"]))["result"]
+    res = await _discover(hass, _zeroconf_info(wifi6["url"], "TESTWIFI7DEVICEID"))
+    assert res["type"] == FlowResultType.ABORT and res["reason"] == "cannot_connect"
+    assert entry.data["host"] == wifi7["url"]
+
+
+async def test_discovery_ignores_something_that_is_not_a_heatit(hass, enable_custom_integrations, socket_enabled):
+    # Nothing answers like a thermostat on this port.
+    res = await _discover(hass, _zeroconf_info("http://127.0.0.1:9", "SOMEID"))
+    assert res["type"] == FlowResultType.ABORT and res["reason"] == "cannot_connect"
+
+
+async def test_discovery_without_id_is_rejected(hass, enable_custom_integrations, wifi7):
+    info = _zeroconf_info(wifi7["url"], "x")
+    info.properties.pop("id")
+    res = await _discover(hass, info)
+    assert res["type"] == FlowResultType.ABORT and res["reason"] == "not_heatit_device"
+
+
+async def test_old_entry_without_unique_id_gets_one(hass, enable_custom_integrations, wifi7):
+    """Entries created before the id was stored must be recognisable by discovery."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    entry = MockConfigEntry(domain=DOMAIN, data={"name": "Old", "host": wifi7["url"]}, unique_id=None)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.unique_id == "TESTWIFI7DEVICEID"
+
+
 # ---------------------------------------------------------------- control
 @pytest.mark.parametrize("thermostat", ["wifi6", "wifi7"], indirect=True)
 async def test_set_temperature_while_on(hass, enable_custom_integrations, thermostat):

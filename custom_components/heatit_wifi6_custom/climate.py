@@ -49,6 +49,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
             # Prefer the device id stored when the entry was created, so the entity's
             # unique_id does not change (and duplicate) once the device comes online.
             device_id = entry.unique_id or f"unknown_{host.replace('.', '_')}"
+        elif entry.unique_id is None:
+            # Entries created before the id was stored: fill it in so the thermostat
+            # can be recognised when it announces a new address on the network.
+            hass.config_entries.async_update_entry(entry, unique_id=str(device_id))
         
         entity = HeatitWiFi6Thermostat(hass, entry, api, name, device_id, status or {})
         # Don't update before add - let polling handle initial connection to speed up startup

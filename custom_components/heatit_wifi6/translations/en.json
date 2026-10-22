@@ -1,14 +1,24 @@
 {
    "title": "Heatit WiFi6 / WiFi7 Thermostat",
    "config": {
+      "flow_title": "Heatit {name}",
       "abort": {
-         "already_configured": "This thermostat has already been added."
+         "already_configured": "This thermostat has already been added.",
+         "cannot_connect": "The discovered device did not answer as a Heatit thermostat.",
+         "not_heatit_device": "The discovered device could not be identified as a Heatit thermostat."
       },
       "error": {
          "cannot_connect": "Connect failed. Please check the address. It should contain only url base address. E.g. http://192.168.10.5 ",
          "unknown": "Unknown error."
       },
       "step": {
+         "discovery_confirm": {
+            "title": "Heatit thermostat found",
+            "description": "A Heatit thermostat was found at {host}. Give it a name to add it.",
+            "data": {
+               "name": "Name "
+            }
+         },
          "user": {
             "title": "Configure Heatit thermostat",
             "description": "Enter short name and base url address for the thermostat",

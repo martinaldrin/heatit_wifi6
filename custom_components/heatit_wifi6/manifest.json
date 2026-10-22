@@ -1,8 +1,11 @@
 {
   "domain": "heatit_wifi6",
   "name": "Heatit WiFi6 / WiFi7 Thermostat",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "config_flow": true,
+  "zeroconf": [
+    {"type": "_tf._tcp.local.", "name": "directlink*"}
+  ],
   "documentation": "https://github.com/mattik-gh/heatit_wifi6",
   "dependencies": ["network"],
   "requirements": ["aiohttp"],

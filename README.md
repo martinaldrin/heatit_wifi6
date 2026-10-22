@@ -10,6 +10,16 @@ This software is a third-party integration and is not affiliated with, maintaine
 * Heatit WiFi6 Thermostat (Firmware v2.20 and newer)
 * Heatit WiFi7 Thermostat (tested with firmware 0.1.16: status, setpoint and temperature sensors, energy and power. The WiFi7 relay mode, BlueFusion and DirectLink are not supported.)
 
+## Automatic discovery
+The WiFi7 announces itself on the local network (mDNS, service `_tf._tcp`, instance `directlink`).
+Home Assistant then offers it under **Settings -> Devices & services**, and a thermostat that is
+already added keeps working when the router gives it a new IP address: the stored address is
+updated, but only after the device has answered with the same id on the new address.
+The WiFi6 unit tested here does not answer mDNS queries, so a WiFi6 is added by entering its
+address, and it should be given a fixed address (DHCP reservation) in the router.
+Entries created by an older version get their device id filled in at the next start, which is what
+lets discovery recognise them.
+
 ## Installation
 
 ### Method 1: HACS (Recommended)
